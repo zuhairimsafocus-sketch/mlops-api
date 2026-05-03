@@ -1,0 +1,41 @@
+name: CI/CD MLOps Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ap-southeast-1
+
+    - name: Login to ECR
+      run: |
+        aws ecr get-login-password \
+        | docker login --username AWS --password-stdin 268769775617.dkr.ecr.ap-southeast-1.amazonaws.com
+
+    - name: Build Docker image
+      run: docker build -t mlops-api .
+
+    - name: Tag Docker image
+      run: docker tag mlops-api 268769775617.dkr.ecr.ap-southeast-1.amazonaws.com/mlops-api
+
+    - name: Push to ECR
+      run: docker push 268769775617.dkr.ecr.ap-southeast-1.amazonaws.com/mlops-api
+
+    - name: Force ECS deployment
+      run: |
+        aws ecs update-service \
+        --cluster mlops-clus \
+        --service mlops-service \
+        --force-new-deployment

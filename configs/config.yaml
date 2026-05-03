@@ -1,0 +1,12 @@
+data:
+  path: data/raw/mercedes_benz_sales_2020_2025.csv
+
+model:
+  params:
+    n_estimators: 100
+    learning_rate: 0.1
+    max_depth: -1c
+
+train:
+  test_size: 0.2
+  random_state: 42
